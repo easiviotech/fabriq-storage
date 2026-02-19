@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SwooleFabric\Storage;
+namespace Fabriq\Storage;
 
-use SwooleFabric\Kernel\Context;
+use Fabriq\Kernel\Context;
 use RuntimeException;
 
 /**

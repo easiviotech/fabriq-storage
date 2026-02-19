@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SwooleFabric\Storage;
+namespace Fabriq\Storage;
 
 use Swoole\Coroutine\Redis;
 use RuntimeException;
