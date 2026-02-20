@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Fabriq\Storage;
 
-use Swoole\Coroutine\Redis;
+use Redis;
 use RuntimeException;
 
 /**
- * Factory for creating Swoole coroutine Redis connections.
+ * Factory for creating Redis connections (phpredis).
+ *
+ * Uses the standard phpredis extension which becomes coroutine-safe
+ * when Swoole\Runtime::enableCoroutine() is active.
  *
  * Used by ConnectionPool. Each call produces a new, connected Redis client.
  */
@@ -27,7 +30,7 @@ final class RedisConnectionFactory
     ) {}
 
     /**
-     * Create and connect a new Redis coroutine client.
+     * Create and connect a new Redis client.
      *
      * @throws RuntimeException on connection failure
      */

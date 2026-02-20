@@ -187,6 +187,59 @@ final class DbManager
         $this->redisPool?->close();
     }
 
+    // ── Generic Pool Access ─────────────────────────────────────────
+
+    /**
+     * Borrow a MySQL connection from any named pool.
+     *
+     * Used by TenantDbRouter and ORM internals for dynamic pool access.
+     *
+     * @throws RuntimeException if pool not found
+     */
+    public function borrow(string $poolName): mixed
+    {
+        return $this->borrowMysql($poolName);
+    }
+
+    /**
+     * Release a MySQL connection back to any named pool.
+     */
+    public function release(string $poolName, mixed $conn): void
+    {
+        $this->releaseMysql($poolName, $conn);
+    }
+
+    /**
+     * Check if a named MySQL pool exists.
+     */
+    public function hasPool(string $name): bool
+    {
+        return isset($this->mysqlPools[$name]);
+    }
+
+    /**
+     * Register a new named MySQL pool at runtime.
+     *
+     * Used by TenantDbRouter to add dedicated tenant pools.
+     */
+    public function addMysqlPool(string $name, ConnectionPool $pool): void
+    {
+        $this->mysqlPools[$name] = $pool;
+    }
+
+    /**
+     * Remove and close a named MySQL pool.
+     *
+     * Used by TenantDbRouter LRU eviction.
+     */
+    public function removeMysqlPool(string $name): void
+    {
+        if (isset($this->mysqlPools[$name])) {
+            $this->mysqlPools[$name]->close();
+            unset($this->mysqlPools[$name]);
+        }
+    }
+
     // ── Internals ────────────────────────────────────────────────────
 
     private function borrowMysql(string $name): mixed
