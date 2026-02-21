@@ -1,0 +1,27 @@
+{
+    "name": "fabriq/storage",
+    "description": "Fabriq Storage — Coroutine-safe MySQL and Redis connection pooling, tenant-aware repositories.",
+    "type": "library",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.2",
+        "ext-swoole": "*",
+        "ext-redis": "*",
+        "fabriq/kernel": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fabriq\\Storage\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
+    }
+}
