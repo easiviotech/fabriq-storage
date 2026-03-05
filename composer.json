@@ -2,7 +2,7 @@
     "name": "fabriq/storage",
     "description": "Fabriq Storage — Coroutine-safe MySQL and Redis connection pooling, tenant-aware repositories.",
     "type": "library",
-    "license": "proprietary",
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
