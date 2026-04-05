@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Fabriq\Storage;
 
-use Swoole\Coroutine\MySQL;
+use PDO;
 use RuntimeException;
 
 /**
- * Factory for creating Swoole coroutine MySQL connections.
+ * Factory for creating coroutine-safe MySQL connections backed by PDO.
  *
- * Used by ConnectionPool. Each call produces a new, connected MySQL client.
+ * PDO becomes coroutine-safe automatically when SWOOLE_HOOK_ALL or
+ * SWOOLE_HOOK_PDO_MYSQL is active (enabled in every console command).
+ * MysqlConnection wraps PDO to expose the same API the ORM layer expects.
+ *
+ * Used by ConnectionPool. Each call produces a new, connected client.
  */
 final class MysqlConnectionFactory
 {
@@ -29,37 +33,38 @@ final class MysqlConnectionFactory
     ) {}
 
     /**
-     * Create and connect a new MySQL coroutine client.
+     * Create and connect a new MySQL client.
      *
      * @throws RuntimeException on connection failure
      */
-    public function create(): MySQL
+    public function create(): MysqlConnection
     {
-        $client = new MySQL();
+        $host     = $this->config['host']     ?? '127.0.0.1';
+        $port     = (int) ($this->config['port']     ?? 3306);
+        $database = $this->config['database'] ?? '';
+        $username = $this->config['username'] ?? 'root';
+        $password = $this->config['password'] ?? '';
+        $charset  = $this->config['charset']  ?? 'utf8mb4';
 
-        $connected = $client->connect([
-            'host' => $this->config['host'] ?? '127.0.0.1',
-            'port' => (int) ($this->config['port'] ?? 3306),
-            'user' => $this->config['username'] ?? 'root',
-            'password' => $this->config['password'] ?? '',
-            'database' => $this->config['database'] ?? '',
-            'charset' => $this->config['charset'] ?? 'utf8mb4',
-            'timeout' => 5.0,
-        ]);
+        $dsn = "mysql:host={$host};port={$port};dbname={$database};charset={$charset}";
 
-        if (!$connected) {
-            throw new RuntimeException(
-                "MySQL connection failed: {$client->connect_error} (errno: {$client->connect_errno})"
-            );
+        try {
+            $pdo = new PDO($dsn, $username, $password, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT            => 5,
+            ]);
+        } catch (\PDOException $e) {
+            throw new RuntimeException("MySQL connection failed: {$e->getMessage()}", 0, $e);
         }
 
-        return $client;
+        return new MysqlConnection($pdo);
     }
 
     /**
      * Health check — sends SELECT 1 to verify the connection is alive.
      */
-    public static function healthCheck(MySQL $conn): bool
+    public static function healthCheck(MysqlConnection $conn): bool
     {
         try {
             $result = $conn->query('SELECT 1');
